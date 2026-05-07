@@ -1,0 +1,30 @@
+# Data (never commit raw or processed data)
+data/raw/*.json
+data/raw/*.csv
+data/processed/
+
+# Generated outputs
+reports/figures/*.png
+reports/figures/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
