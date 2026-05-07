@@ -21,7 +21,6 @@ def save_fig(fig: plt.Figure, path: Path, dpi: int = 150) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=dpi, bbox_inches="tight")
     log.info("Saved figure: %s", path)
-    plt.close(fig)
 
 
 def bar_comparison(
