@@ -59,7 +59,7 @@ Starbucks sends promotional offers to app users. Not every customer sees every o
 1. Is viewing a promotion **associated** with a higher completion rate?
 2. Which offer type is **most effective**?
 3. Which customer segments **respond best**?
-4. Is the campaign **profitable** after accounting for rewards paid out?
+4. Which offer has the strongest **observed revenue-versus-reward scenario**?
 
 ### Pipeline
 
@@ -174,7 +174,7 @@ $$\text{Observed scenario ratio} = \frac{\text{Revenue proxy} - \text{Campaign C
 | H3 | Exposed customers spend more ($95 → $108) | Welch's t | +$12.17 / +12.8% | ≈ 0 | **Reject H₀** |
 | H4 | Completion depends on gender | Chi-squared | χ²=1712.8 | ≈ 0 | **Reject H₀** |
 
-All 4 remain significant after Bonferroni correction (adjusted α = 0.0125). H2 is not significant regardless.
+H1, H3, and H4 remain significant after Bonferroni correction (adjusted α = 0.0125). H2 is not significant.
 
 ### Uplift by Segment (Top 5 — Discount offers only)
 
@@ -188,7 +188,7 @@ All 4 remain significant after Bonferroni correction (adjusted α = 0.0125). H2 
 
 ### ROI by Offer Type
 
-| Offer Type | Incremental Revenue | Campaign Cost | Net Profit | ROI |
+| Offer Type | Observed revenue proxy | Reward cost | Observed net scenario | Observed scenario ratio |
 |---|---|---|---|---|
 | Discount | $185,890 | $98,220 | **+$87,670** | **+89%** |
 | BOGO | $96,285 | $234,765 | **−$138,480** | **−59%** |
@@ -204,7 +204,7 @@ All 4 remain significant after Bonferroni correction (adjusted α = 0.0125). H2 
 | `02_ab_testing.ipynb` | Experiment design, group comparison, observed lift | Conversion by group and offer type |
 | `03_hypothesis_testing.ipynb` | Z-test, t-test, χ², Bonferroni correction | p-values, significance decisions |
 | `04_uplift_segmentation.ipynb` | Uplift by gender, age, income, heatmaps | Top-responding segments ranking |
-| `05_roi_analysis.ipynb` | ROI by offer type, channel, segment | Business profitability per campaign |
+| `05_roi_analysis.ipynb` | Observed revenue-versus-reward scenario by offer type, channel, segment | Prioritization hypotheses |
 
 ---
 
@@ -229,7 +229,8 @@ promo-effectiveness-analysis/
 │       ├── stats.py            ← Z-test, t-test, chi-squared, ROI, Bonferroni
 │       └── plot.py             ← Reusable chart helpers
 ├── tests/
-│   └── test_transform.py       ← 12 unit tests for transform logic
+│   ├── test_transform.py       ← attribution and transform tests
+│   └── test_causal.py          ← synthetic causal-module tests
 ├── reports/
 │   └── figures/                ← Charts exported from notebooks
 ├── main.py                     ← Run ETL once before opening notebooks
@@ -250,6 +251,8 @@ To run tests:
 ```bash
 python -m pytest tests/ -v
 ```
+
+The suite contains 22 automated tests covering attribution, data-quality rules, and the isolated synthetic causal module.
 
 ---
 
