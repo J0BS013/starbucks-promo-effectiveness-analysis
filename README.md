@@ -159,7 +159,7 @@ $$\text{Observed scenario ratio} = \frac{\text{Revenue proxy} - \text{Campaign C
 
 ### Synthetic causal module
 
-`src/causal.py` demonstrates the separate workflow required for causal claims: known random assignment, an assigned-treatment proportion test, and a sample-size plan for a selected minimum detectable effect. Its generated data is synthetic and is never mixed with the observational Starbucks transcript analysis.
+`src/causal.py` contains the separate workflow required for causal claims: known random assignment, an assigned-treatment proportion test, and a sample-size plan for a selected minimum detectable effect. Its generated data is synthetic and is never mixed with the observational Starbucks transcript analysis.
 
 ---
 
