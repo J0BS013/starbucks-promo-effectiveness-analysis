@@ -6,13 +6,13 @@
 
 ## Business Question
 
-> *Which promotional offer type drives the highest incremental conversion and revenue, in which customer segments, and at what ROI?*
+> *How are offer views, completions, and observed revenue associated with promotional exposure across customer segments?*
 
 ---
 
 ## Executive Summary
 
-| Offer Type | Uplift (vs. control) | Best Segment | ROI |
+| Offer Type | Observed completion difference | Best Segment | Observed reward/revenue ratio |
 |---|---|---|---|
 | **Discount** | **+84.6%** | Low-income / Age 35–44 | **+89%** |
 | BOGO | +33.9% | Age 35–44 | −59% |
@@ -20,13 +20,13 @@
 
 **Key findings:**
 
-1. **Discount is the best campaign** — statistically significant uplift of +84.6% over organic baseline and the only offer type with positive ROI (+89%). For every $1 spent on rewards, it returned $1.89 in incremental revenue.
-2. **BOGO drives conversion but destroys value** — uplift of +33.9% is real (p < 0.05) but the reward cost ($234K) exceeds incremental revenue ($96K), resulting in −59% ROI.
-3. **Informational offers have zero measurable effect** — no statistically significant conversion uplift, zero reward cost, no ROI case. Budget should be reallocated.
-4. **Viewing the offer is the key driver** — customers who viewed any offer converted at 62.2% vs. 35.4% organic (+75.8% uplift, p ≈ 0). Ensuring visibility is more important than offer type selection.
-5. **Exposed customers spend more** — average total spend of $107.64 vs. $95.47 for non-exposed (+12.8%, p ≈ 0), confirming offers lift basket size beyond just completion.
+1. Discount has the strongest observed association with completion in this dataset.
+2. BOGO has a higher observed reward cost relative to the analyzed revenue proxy.
+3. Informational offers do not generate offer-completion events by design.
+4. Customers who viewed offers had a higher observed completion rate; this can reflect selection bias.
+5. Exposed and non-exposed customers differ in observed spend, which is a hypothesis for a randomized experiment.
 
-**Recommendation:** Concentrate Discount offers on low-income customers aged 25–44, where uplift exceeds +140%. Pause BOGO pending a reward structure review — the mechanic works behaviorally but is currently unprofitable. Eliminate Informational from the budget.
+**Interpretation limit:** these results are observational associations, not causal estimates. Viewing is a post-exposure behavior, so viewers can systematically differ from non-viewers. They are useful for forming prioritization hypotheses, but incremental lift and causal ROI require randomized assignment.
 
 ---
 
@@ -56,7 +56,7 @@ Place the 3 JSON files in `data/raw/`.
 
 Starbucks sends promotional offers to app users. Not every customer sees every offer, and not every offer type works equally well for every customer. We want to measure:
 
-1. Does viewing a promotion **cause** customers to convert more?
+1. Is viewing a promotion **associated** with a higher completion rate?
 2. Which offer type is **most effective**?
 3. Which customer segments **respond best**?
 4. Is the campaign **profitable** after accounting for rewards paid out?
@@ -78,21 +78,18 @@ data/raw/*.json
 
 ## Statistical Methods Explained
 
-### A/B Testing vs. Hypothesis Testing
+### Observational analysis vs. randomized experiments
 
 These two concepts are **related but distinct**:
 
-| | A/B Testing | Hypothesis Testing |
+| | Randomized A/B testing | Hypothesis testing |
 |---|---|---|
-| **What it is** | An *experimental design* | A *statistical inference framework* |
-| **Question answered** | What did we observe? | Can we trust what we observed? |
-| **Output** | Conversion rates, lift, funnels | p-values, test statistics, decisions |
-| **Notebook** | 02 | 03 |
+| **What it is** | Random assignment to variants | A statistical inference framework |
+| **Question answered** | What is the causal effect of assignment? | Is an observed difference compatible with chance under a model? |
+| **Output** | Causal lift, if design assumptions hold | p-values, test statistics, decisions |
+| **Available here** | No — assignment is not available in this dataset | Yes, for observational associations |
 
-**A/B Testing** is the experiment — you design two groups, collect data, and compare results.  
-**Hypothesis Testing** is the validation — you formally determine whether the observed difference is real or due to random chance.
-
-*A/B Testing tells you what happened. Hypothesis Testing tells you whether to believe it.*
+This dataset does not expose random treatment assignment or a valid holdout group. Viewed-versus-not-viewed comparisons are therefore observational. A p-value measures sampling uncertainty under a model; it does not remove selection bias, confounding, or the post-treatment nature of viewing. Causal lift and incremental ROI need a separately randomized experiment.
 
 ---
 
@@ -102,8 +99,8 @@ There is no pure holdout group in this dataset. We use the closest proxy:
 
 | Group | Definition | Rationale |
 |---|---|---|
-| **Control (A)** | Received offer but **did not view** it | Behaves as if no offer exists — organic baseline |
-| **Treatment (B)** | **Viewed** the offer | Aware of and influenced by the promotion |
+| **Not viewed** | Received offer but **did not view** it | Observational comparison group; not an organic control |
+| **Viewed** | **Viewed** the offer | Observational comparison group; can differ before viewing |
 
 ---
 
@@ -142,11 +139,27 @@ $$\text{Uplift}_{\text{relative}} = \frac{\text{Rate}_{\text{treatment}} - \text
 
 ### ROI
 
-$$\text{ROI} = \frac{\text{Incremental Revenue} - \text{Campaign Cost}}{\text{Campaign Cost}} \times 100\%$$
+$$\text{Observed scenario ratio} = \frac{\text{Revenue proxy} - \text{Campaign Cost}}{\text{Campaign Cost}} \times 100\%$$
 
-- **Incremental Revenue** = uplift × treated customers × avg ticket ($12.78)
+- **Revenue proxy** = observed completion-rate difference × viewed customers × avg ticket ($12.78)
 - **Campaign Cost** = total rewards paid to completers
-- Only statistically significant uplift is used — non-significant results produce $0 incremental revenue
+- This is not incremental causal revenue or causal ROI; it is an observed scenario estimate.
+
+---
+
+## Attribution model and data quality
+
+`offer_events` is an `offer_exposure` table with exactly one row for each `offer received` event. It contains `exposure_id`, `person`, `offer_id`, `time_received`, `valid_until`, first eligible view/completion timestamps, flags, and attributed reward.
+
+- A view or completion must occur after the send and before `valid_until`.
+- For overlapping sends of the same offer, the event is assigned to the last eligible exposure.
+- A view or completion event can be assigned only once.
+- The pipeline fails fast if an offer sent in the transcript has no duration in the portfolio.
+- Tests cover repeated sends, expiration, input-order independence, overlapping windows, missing events, and reward reconciliation.
+
+### Synthetic causal module
+
+`src/causal.py` demonstrates the separate workflow required for causal claims: known random assignment, an assigned-treatment proportion test, and a sample-size plan for a selected minimum detectable effect. Its generated data is synthetic and is never mixed with the observational Starbucks transcript analysis.
 
 ---
 

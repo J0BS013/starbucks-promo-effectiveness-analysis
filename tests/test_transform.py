@@ -96,3 +96,78 @@ class TestBuildOfferEvents:
         events = build_offer_events(raw_transcript)
         c2_o2 = events[(events["person"] == "c2") & (events["offer_id"] == "o2")]
         assert c2_o2["completed"].iloc[0] == False
+
+    def test_repeated_offer_has_one_row_per_exposure_and_no_reward_duplication(self):
+        transcript = pd.DataFrame({
+            "person": ["c1"] * 6,
+            "event": ["offer received", "offer viewed", "offer completed"] * 2,
+            "time": [0, 2, 4, 10, 12, 14],
+            "value": [
+                {"offer id": "o1"}, {"offer id": "o1"}, {"offer_id": "o1", "reward": 5},
+                {"offer id": "o1"}, {"offer id": "o1"}, {"offer_id": "o1", "reward": 5},
+            ],
+        })
+        events = build_offer_events(transcript)
+        assert len(events) == 2
+        assert events["exposure_id"].is_unique
+        assert events["viewed"].sum() == 2
+        assert events["completed"].sum() == 2
+        assert events["reward"].sum() == 10
+
+    def test_out_of_window_events_are_not_attributed(self):
+        transcript = pd.DataFrame({
+            "person": ["c1", "c1", "c1"],
+            "event": ["offer received", "offer viewed", "offer completed"],
+            "time": [10, 9, 35],
+            "value": [{"offer id": "o1"}, {"offer id": "o1"}, {"offer_id": "o1", "reward": 5}],
+        })
+        portfolio = pd.DataFrame({"id": ["o1"], "duration": [1]})
+        events = build_offer_events(transcript, portfolio)
+        assert not events["viewed"].iloc[0]
+        assert not events["completed"].iloc[0]
+
+    def test_overlapping_exposures_use_last_eligible_exposure_once(self):
+        transcript = pd.DataFrame({
+            "person": ["c1", "c1", "c1"],
+            "event": ["offer received", "offer received", "offer completed"],
+            "time": [0, 5, 6],
+            "value": [{"offer id": "o1"}, {"offer id": "o1"}, {"offer_id": "o1", "reward": 5}],
+        })
+        portfolio = pd.DataFrame({"id": ["o1"], "duration": [1]})
+        events = build_offer_events(transcript, portfolio)
+        assert events["completed"].tolist() == [False, True]
+        assert events["reward"].sum() == 5
+
+    def test_events_are_attributed_by_event_time_not_input_order(self):
+        transcript = pd.DataFrame({
+            "person": ["c1", "c1", "c1"],
+            "event": ["offer completed", "offer received", "offer viewed"],
+            "time": [8, 0, 4],
+            "value": [{"offer_id": "o1", "reward": 5}, {"offer id": "o1"}, {"offer id": "o1"}],
+        })
+        portfolio = pd.DataFrame({"id": ["o1"], "duration": [1]})
+        event = build_offer_events(transcript, portfolio).iloc[0]
+        assert event["time_viewed"] == 4
+        assert event["time_completed"] == 8
+        assert event["reward"] == 5
+
+    def test_completion_does_not_require_a_view(self):
+        transcript = pd.DataFrame({
+            "person": ["c1", "c1"],
+            "event": ["offer received", "offer completed"],
+            "time": [0, 6],
+            "value": [{"offer id": "o1"}, {"offer_id": "o1", "reward": 5}],
+        })
+        event = build_offer_events(transcript).iloc[0]
+        assert not event["viewed"]
+        assert event["completed"]
+        assert event["reward"] == 5
+
+    def test_missing_offer_duration_fails_fast(self):
+        transcript = pd.DataFrame({
+            "person": ["c1"], "event": ["offer received"], "time": [0],
+            "value": [{"offer id": "unknown"}],
+        })
+        portfolio = pd.DataFrame({"id": ["o1"], "duration": [1]})
+        with pytest.raises(ValueError, match="Missing duration"):
+            build_offer_events(transcript, portfolio)
