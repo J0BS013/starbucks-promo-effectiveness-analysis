@@ -30,6 +30,16 @@
 
 ---
 
+## Visual results
+
+![Observed offer funnel](reports/figures/01_overall_funnel.png)
+
+![Observed reward and revenue scenario by offer type](reports/figures/05_roi_by_type.png)
+
+The complete analysis also includes customer demographics, conversion differences, segment heatmaps, spend comparisons, and the isolated randomized-experiment module in notebooks `01` through `05`.
+
+---
+
 ## Dataset
 
 **Starbucks Capstone Challenge** — simulated data mirroring real Starbucks customer behavior.
