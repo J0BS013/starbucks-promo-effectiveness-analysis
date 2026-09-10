@@ -6,6 +6,8 @@ data/processed/
 # Generated outputs
 reports/figures/*.png
 reports/figures/*.pdf
+!reports/figures/01_overall_funnel.png
+!reports/figures/05_roi_by_type.png
 
 # Python
 __pycache__/
