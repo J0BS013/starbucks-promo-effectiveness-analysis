@@ -1,5 +1,7 @@
 # Promo Effectiveness Analysis — Starbucks Capstone
 
+[![CI](https://github.com/J0BS013/starbucks-promo-effectiveness-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/J0BS013/starbucks-promo-effectiveness-analysis/actions/workflows/ci.yml)
+
 **Stack:** Python · pandas · scipy · statsmodels · matplotlib/seaborn · Jupyter
 
 ---
@@ -27,6 +29,8 @@
 5. Exposed and non-exposed customers differ in observed spend, which is a hypothesis for a randomized experiment.
 
 **Interpretation limit:** these results are observational associations, not causal estimates. Viewing is a post-exposure behavior, so viewers can systematically differ from non-viewers. They are useful for forming prioritization hypotheses, but incremental lift and causal ROI require randomized assignment.
+
+The resulting recommendation, experiment design, risks, and monitoring plan are documented in the [Promotional Offer Decision Memo](docs/decision_memo.md).
 
 ---
 
